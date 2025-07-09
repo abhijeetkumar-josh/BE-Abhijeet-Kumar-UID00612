@@ -17,15 +17,14 @@ class Todo(models.Model):
     )
     name = models.CharField(max_length=100)
     done = models.BooleanField(default=False)
-    date_created = models.DateTimeField( default=datetime.date.today)
+    date_created = models.DateTimeField(auto_now_add=True)
     date_completed = models.DateTimeField(null=True,blank=True)
-
-    
+  
     @property
     def status(self):
         return 'done' if self.done else 'To do'
 
-    def __str(self):
+    def __str__(self):
         return self.name
     
 

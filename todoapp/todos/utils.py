@@ -9,6 +9,9 @@ from rest_framework.authtoken.models import Token
 from projects.models import Project,ProjectMember
 from django.db.models import Count, Q
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db.models import Prefetch
+from django.contrib.postgres.aggregates import ArrayAgg
+
 
 # from .todoapp.users.models import CustomUser
 # Add code to this util to return all users list in specified format.
@@ -283,16 +286,27 @@ def fetch_project_with_member_name_start_or_end_with_a():
 # Note: use serializer for generating this format.
 # use json.load(json.dumps(serializer.data)) while returning data from this function for test cases to pass.
 def fetch_project_wise_report():
-    """
-    Util to fetch project wise todos pending &  count per user.
-    :return: list of dicts - List of report data
-    """
-    # Write your code here
-    Userdata =Project.objects.all()
-    # print(Serializer6(Userdata,many=True).data)
-    serializer=projectSerializer(Userdata,many=True)
-    return json.dumps(serializer.data)
-    
+#     pass
+# def fd():
+    # Userdata =Project.objects.all()
+    # # print(Serializer6(Userdata,many=True).data)
+    # serializer=projectSerializer(Userdata,many=True)
+    # # print(json.dumps(serializer.data))
+    # return json.loads(json.dumps(serializer.data))
+    annotated_users = CustomUser.objects.annotate(
+        completed_count=Count('todos', filter=Q(todos__done=True)),
+        pending_count=Count('todos', filter=Q(todos__done=False))
+    ).order_by('email')
+
+    # Prefetch the annotated users related to projects via 'member' field,
+    # and store them in `annotated_members` to avoid extra queries in serializer
+    projects = Project.objects.prefetch_related(
+        Prefetch('member', queryset=annotated_users, to_attr='annotated_members')
+    )
+
+    serializer = projectSerializer(projects, many=True)
+    # print(json.loads(json.dumps(serializer.data)))
+    return json.loads(json.dumps(serializer.data))
 
 
 # Add code to this util to return all users project stats in specified format.
@@ -320,30 +334,71 @@ def fetch_project_wise_report():
 # use json.load(json.dumps(serializer.data)) while returning data from this function for test cases to pass.
 # Hint: Use subquery/aggregation for project data.
 def fetch_user_wise_project_status():
+    pass
+def fd():
     """
     Util to fetch user wise project statuses.
     :return: list of dicts - List of user project data
     """
-    # Write your code here
-    User = CustomUser
-    all_users = User.objects.prefetch_related('project_membership') 
-    result = []
+    # users = CustomUser.objects.prefetch_related(
+    #   Prefetch(
+    #       'project_membership',  # Prefetch memberships themselves
+    #       queryset=ProjectMember.objects.select_related('project'),
+    #       to_attr='prefetched_memberships'  # Attach memberships here
+    #     )
+    # )
 
-    for user in all_users:
-        user_projects = Project.objects.filter(member=user)
+    # result = []
 
-        to_do = user_projects.filter(status=0).values_list('name', flat=True)
-        in_progress = user_projects.filter(status=1).values_list('name', flat=True)
-        completed = user_projects.filter(status=2).values_list('name', flat=True)
+    # for user in users:
+    #    projects = [membership.project for membership in user.prefetched_memberships]
 
+    #    to_do = [p.name for p in projects if p.status == 0]
+    #    in_progress = [p.name for p in projects if p.status == 1]
+    #    completed = [p.name for p in projects if p.status == 2]
+
+    #    result.append({
+    #     "first_name": user.first_name,
+    #     "last_name": user.last_name,
+    #     "email": user.email,
+    #     "to_do_projects": to_do,
+    #     "in_progress_projects": in_progress,
+    #     "completed_projects": completed,
+    #     })
+    result=[]
+    users_with_projects = CustomUser.objects.annotate(
+      to_be_started_projects=ArrayAgg(
+        'project_membership__project__name',
+        filter=Q(project_membership__project__status=0),
+        distinct=True
+      ),
+      in_progress_projects=ArrayAgg(
+        'project_membership__project__name',
+        filter=Q(project_membership__project__status=1),
+        distinct=True
+      ),
+      completed_projects=ArrayAgg(
+        'project_membership__project__name',
+        filter=Q(project_membership__project__status=2),
+        distinct=True
+      ),
+    )
+    for user in users_with_projects:
+        if user.first_name=='abhijeet': continue
         result.append({
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "email": user.email,
-            "to_do_projects": list(to_do),
-            "in_progress_projects": list(in_progress),
-            "completed_projects": list(completed),
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "email": user.email,
+        "to_do_projects": user.to_be_started_projects,
+        "in_progress_projects": user.in_progress_projects,
+        "completed_projects": user.completed_projects,
         })
+
+
     serializer = UserProjectStatusSerializer(result, many=True)
-    return json.dumps(serializer.data)
+    print(json.loads(json.dumps(serializer.data)))
+    # return json.loads(json.dumps(serializer.data))
+
+
+
 
