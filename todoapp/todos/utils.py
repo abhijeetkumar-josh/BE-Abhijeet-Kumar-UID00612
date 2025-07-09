@@ -69,8 +69,6 @@ def fetch_all_users():
 # Note: use serializer for generating this format.
 # use json.load(json.dumps(serializer.data)) while returning data from this function for test cases to pass.
 def fetch_all_todo_list_with_user_details():
-#     pass
-# def fd():
     userdata=Todo.objects.select_related('user').all()
     serializer=Task2Serializer(userdata,many=True)
     return json.loads(json.dumps(serializer.data))
@@ -122,8 +120,6 @@ def fetch_projects_details():
 # Note: use serializer for generating this format.
 # use json.load(json.dumps(serializer.data)) while returning data from this function for test cases to pass.
 def fetch_users_todo_stats():
-#     pass
-# def fd():
     users = CustomUser.objects.annotate(
         completed_count=Count('todos', filter=Q(todos__done=True)),
         pending_count=Count('todos', filter=Q(todos__done=False))
@@ -286,20 +282,11 @@ def fetch_project_with_member_name_start_or_end_with_a():
 # Note: use serializer for generating this format.
 # use json.load(json.dumps(serializer.data)) while returning data from this function for test cases to pass.
 def fetch_project_wise_report():
-#     pass
-# def fd():
-    # Userdata =Project.objects.all()
-    # # print(Serializer6(Userdata,many=True).data)
-    # serializer=projectSerializer(Userdata,many=True)
-    # # print(json.dumps(serializer.data))
-    # return json.loads(json.dumps(serializer.data))
     annotated_users = CustomUser.objects.annotate(
         completed_count=Count('todos', filter=Q(todos__done=True)),
         pending_count=Count('todos', filter=Q(todos__done=False))
     ).order_by('email')
 
-    # Prefetch the annotated users related to projects via 'member' field,
-    # and store them in `annotated_members` to avoid extra queries in serializer
     projects = Project.objects.prefetch_related(
         Prefetch('member', queryset=annotated_users, to_attr='annotated_members')
     )
@@ -334,37 +321,10 @@ def fetch_project_wise_report():
 # use json.load(json.dumps(serializer.data)) while returning data from this function for test cases to pass.
 # Hint: Use subquery/aggregation for project data.
 def fetch_user_wise_project_status():
-    pass
-def fd():
     """
     Util to fetch user wise project statuses.
     :return: list of dicts - List of user project data
     """
-    # users = CustomUser.objects.prefetch_related(
-    #   Prefetch(
-    #       'project_membership',  # Prefetch memberships themselves
-    #       queryset=ProjectMember.objects.select_related('project'),
-    #       to_attr='prefetched_memberships'  # Attach memberships here
-    #     )
-    # )
-
-    # result = []
-
-    # for user in users:
-    #    projects = [membership.project for membership in user.prefetched_memberships]
-
-    #    to_do = [p.name for p in projects if p.status == 0]
-    #    in_progress = [p.name for p in projects if p.status == 1]
-    #    completed = [p.name for p in projects if p.status == 2]
-
-    #    result.append({
-    #     "first_name": user.first_name,
-    #     "last_name": user.last_name,
-    #     "email": user.email,
-    #     "to_do_projects": to_do,
-    #     "in_progress_projects": in_progress,
-    #     "completed_projects": completed,
-    #     })
     result=[]
     users_with_projects = CustomUser.objects.annotate(
       to_be_started_projects=ArrayAgg(
@@ -396,8 +356,8 @@ def fd():
 
 
     serializer = UserProjectStatusSerializer(result, many=True)
-    print(json.loads(json.dumps(serializer.data)))
-    # return json.loads(json.dumps(serializer.data))
+    # print(json.loads(json.dumps(serializer.data)))
+    return json.loads(json.dumps(serializer.data))
 
 
 
