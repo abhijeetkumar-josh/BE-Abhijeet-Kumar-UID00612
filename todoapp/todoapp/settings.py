@@ -44,10 +44,10 @@ INSTALLED_APPS = [
     'users',
     'todos',
     'projects',
-
+    'nose',
     'django_nose'
 ]
-AUTH_USER_MODEL = u'users.CustomUser'
+AUTH_USER_MODEL = 'users.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -86,15 +86,16 @@ WSGI_APPLICATION = 'todoapp.wsgi.application'
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
 DATABASES = {
-    u'default': {
-        u'ENGINE': u'django.db.backends.postgresql',
-        u'NAME': u'',                      # Add database name.
-        u'USER': u'postgres',              # Add psql user name. For default use postgres.
-        u'PASSWORD': u'',                  # Add user password if exists.
-        u'HOST': u'',                      # Set to empty string for localhost..
-        u'PORT': u'5432',                  # Psql service running port.
-    },
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'db4',
+        'USER': 'user4',
+        'PASSWORD': 'abhi',
+        'HOST':'localhost',
+        'PORT':'5432',
+    }
 }
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
