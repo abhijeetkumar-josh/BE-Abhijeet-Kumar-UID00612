@@ -2,3 +2,6 @@
 project2/.venv/
 project1/.venv/
 **/.venv/
+__pycache__/
+*.pyc
+
