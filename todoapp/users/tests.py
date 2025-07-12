@@ -2,7 +2,6 @@ import json
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
@@ -76,4 +75,3 @@ class UserLoginAPIViewTestCase(APITestCase):
         response = self.client.post(self.url, {"email": self.email, "password": self.password})
         self.assertEqual(200, response.status_code)
         self.assertTrue("auth_token" in json.loads(response.content))
-

@@ -5,8 +5,6 @@ from django.test import TestCase
 from todos import utils as todos_utils
 
 
-
-
 class TestSetupMixin(object):
 
     def setUp(self):
@@ -1580,6 +1578,4 @@ class ORMUtilTest(TestSetupMixin, TestCase):
             data,
             expected_data
         )
-
-
 
