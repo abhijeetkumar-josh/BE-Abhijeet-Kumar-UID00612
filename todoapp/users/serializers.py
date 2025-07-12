@@ -1,11 +1,8 @@
-from django.contrib.auth import authenticate
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.hashers import make_password
 from django.utils.translation import gettext_lazy as _
-
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
-
 
 from .models import CustomUser
 
@@ -21,7 +18,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['first_name', 'last_name', 'email', 'password']
+        fields = ['first_name', 'last_name', 'email', 'password','id']
 
     def validate_email(self, value):
         if CustomUser.objects.filter(email=value).exists():
@@ -31,7 +28,8 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         password = validated_data.pop('password')
         user = CustomUser(**validated_data)
-        user.set_password(password)  # hashes the password
+        user.set_password(password)  
         user.save()
-        Token.objects.create(user=user)  # create auth token
+        Token.objects.create(user=user) 
         return user
+    

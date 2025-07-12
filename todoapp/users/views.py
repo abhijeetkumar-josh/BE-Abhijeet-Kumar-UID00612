@@ -1,19 +1,20 @@
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from django.contrib.auth import authenticate
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from .serializers import UserRegisterSerializer  # adjust import as needed
 from rest_framework.permissions import AllowAny
-from django.contrib.auth import authenticate
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .serializers import UserRegisterSerializer
+
 
 class UserRegistrationAPIView(APIView):
     """
     success response format
     {
-        "first_name": "Abhijeet",
-        "last_name": "Kumar",
-        "email": "abhi.kumar@josh.com",
+        "first_name": "",
+        "last_name": "",
+        "email": "",
         "password":""
     }
     """
@@ -28,7 +29,8 @@ class UserRegistrationAPIView(APIView):
                 "last_name": user.last_name,
                 "email": user.email,
                 "date_joined": user.date_joined,
-                "token": token.key
+                "token": token.key,
+                "user_id":user.id
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -40,7 +42,7 @@ class UserLoginAPIView(APIView):
            auth_token: ""
          }
     """
-    permission_classes=[AllowAny]
+    permission_classes = [AllowAny]
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
@@ -58,3 +60,4 @@ class UserLoginAPIView(APIView):
         token, _ = Token.objects.get_or_create(user=user)
 
         return Response({'auth_token': token.key}, status=status.HTTP_200_OK)
+    

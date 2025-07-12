@@ -1,8 +1,7 @@
 from __future__ import unicode_literals
 
 from django.contrib.auth.base_user import AbstractBaseUser
-from django.contrib.auth.models import BaseUserManager
-from django.contrib.auth.models import PermissionsMixin
+from django.contrib.auth.models import BaseUserManager, PermissionsMixin
 from django.db import models
 from django.utils import timezone
 
@@ -21,15 +20,11 @@ class UserManager(BaseUserManager):
         return user
     
     def create_superuser(self,email,password,**extra_fields):
-        # self.create_user(email,password,**extra_fields)
         extra_fields.setdefault("is_staff",True)
         extra_fields.setdefault("is_active",True)
         extra_fields.setdefault('is_superuser',True)
-
         return self.create_user(email,password,**extra_fields)
-
-
-
+    
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     """
@@ -57,4 +52,3 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
-

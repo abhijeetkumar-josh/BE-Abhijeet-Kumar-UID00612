@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-import os
-import sys
 import collections
 import collections.abc
+import os
+import sys
+
 collections.Callable = collections.abc.Callable
 
 if __name__ == "__main__":

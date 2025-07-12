@@ -1,4 +1,5 @@
-.venv/
-project2/.venv/
-project1/.venv/
-**./venv
+**/.venv/
+__pycache__/
+*.pyc
+project1/
+project2/
