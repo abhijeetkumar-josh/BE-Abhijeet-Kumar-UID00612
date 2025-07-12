@@ -1,52 +1,46 @@
-from django.contrib.auth import get_user_model
-from rest_framework import serializers
-from .models import Todo
-from users.models import CustomUser
-from projects.models import *
-from django.db.models import Count, Q
 import json
 
-class TaskSerializer(serializers.ModelSerializer):
-    class Meta:
-        model=Todo
-        fields='__all__'
+from django.contrib.auth import get_user_model
+from django.db.models import Count, Q
+from rest_framework import serializers
 
-class User2Serializer(serializers.ModelSerializer):
+from projects.models import *
+from users.models import CustomUser
+
+from .models import Todo
+
+
+class nested_Serializer(serializers.ModelSerializer):
     class Meta:
         model=CustomUser
         fields=['first_name','last_name','email']
 
-class Task2Serializer(serializers.ModelSerializer):
-    creator=User2Serializer(source='user',read_only=True)
+
+class all_todos_Serializer(serializers.ModelSerializer):
+    creator=nested_Serializer(source='user',read_only=True)
     created_at = serializers.DateTimeField(source='date_created', format='%I:%M %p, %d %b, %Y')
     status=serializers.ReadOnlyField()
     class Meta:
         model=Todo
         fields=['id','name','status','created_at','creator']
 
-    
-class Serializer3(serializers.ModelSerializer):
-    user=User2Serializer(many=True,read_only=True)
-    class Meta:
-        model=Project
-        fields=['id','name','max_member','status']
 
-
-class Serializer4(serializers.ModelSerializer):
+class users_todo_stats_Serializer(serializers.ModelSerializer):
     completed_count=serializers.IntegerField(read_only=True)
     pending_count=serializers.IntegerField(read_only=True)
     class Meta:
         model=CustomUser
         fields=['id','first_name','last_name','email','completed_count','pending_count']
-class Serializer9(serializers.ModelSerializer):
-    # completed_count=serializers.IntegerField(read_only=True)
+
+
+class pending_todos_Serializer(serializers.ModelSerializer):
     pending_count=serializers.IntegerField(read_only=True)
     class Meta:
         model=CustomUser
         fields=['id','first_name','last_name','email','pending_count']
 
     
-class Serializer5(serializers.ModelSerializer):
+class project_report_helper_Serializer(serializers.ModelSerializer):
     completed_count = serializers.IntegerField(read_only=True)
     pending_count = serializers.IntegerField(read_only=True)
 
@@ -54,7 +48,8 @@ class Serializer5(serializers.ModelSerializer):
         model = CustomUser
         fields = ['first_name', 'last_name', 'email', 'pending_count','completed_count']
 
-class projectSerializer(serializers.ModelSerializer):
+
+class project_wise_report_Serializer(serializers.ModelSerializer):
     project_title = serializers.CharField(source='name')
     report = serializers.SerializerMethodField()
 
@@ -63,17 +58,11 @@ class projectSerializer(serializers.ModelSerializer):
         fields = ['project_title', 'report']
 
     def get_report(self, obj):
-        # Use the prefetched and annotated users stored in `annotated_members`
         users = getattr(obj, 'annotated_members', [])
-        return Serializer5(users, many=True).data
-    
-class Serializer6(serializers.ModelSerializer):
-    class Meta:
-        model=Project
-        fields=['name','max_members']
+        return project_report_helper_Serializer(users, many=True).data
 
 
-class UserProjectStatusSerializer(serializers.Serializer):
+class user_wise_project_status_Serializer(serializers.Serializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     email = serializers.EmailField()
@@ -83,27 +72,13 @@ class UserProjectStatusSerializer(serializers.Serializer):
     completed_projects = serializers.ListField(child=serializers.CharField())
 
 
-# class TodoSerializer(serializers.ModelSerializer):
-#     created_at = serializers.DateTimeField(source='date_created', format='%I:%M %p, %d %b, %Y',read_only=True)
-#     class Meta:
-#         model=Todo
-#         fields=['id','name','status','created_at','done']
-#         read_only_fields=['id','created_at']
-    
-
-
-
-# class TodoSerializer(serializers.ModelSerializer):
-#     user_id = serializers.IntegerField(write_only=True)
-
-
-class TodoCreateSerializer(serializers.ModelSerializer):
+class Todo_Create_Serializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(write_only=True)
     todo = serializers.CharField(source='name')
 
     class Meta:
         model = Todo
-        fields = ['user_id','todo', 'done', 'date_created']
+        fields = ['user_id','todo', 'done', 'date_created','id']
         read_only_fields = ['done', 'date_created']
 
     def create(self, validated_data):
@@ -112,7 +87,7 @@ class TodoCreateSerializer(serializers.ModelSerializer):
         return Todo.objects.create(user=user, **validated_data)
 
 
-class TodoUpdateSerializer(serializers.ModelSerializer):
+class Todo_Update_Serializer(serializers.ModelSerializer):
     todo_id = serializers.IntegerField(source='id')
     todo =serializers.CharField(source='name')
     class Meta:
@@ -120,7 +95,7 @@ class TodoUpdateSerializer(serializers.ModelSerializer):
         fields = ['todo_id', 'todo', 'done']
 
 
-class TodoDetailSerializer(serializers.ModelSerializer):
+class Todo_Detail_Serializer(serializers.ModelSerializer):
     todo_id = serializers.IntegerField(source='id')
     todo =serializers.CharField(source='name')
     class Meta:
@@ -128,8 +103,7 @@ class TodoDetailSerializer(serializers.ModelSerializer):
         fields = ['todo_id', 'todo', 'done']
 
 
-
-class TodoListSerializer(serializers.ModelSerializer):
+class Todo_List_Serializer(serializers.ModelSerializer):
     todo_id = serializers.IntegerField(source='id')
     todo =serializers.CharField(source='name')
     class Meta:
