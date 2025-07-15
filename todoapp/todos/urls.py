@@ -5,8 +5,7 @@ app_name = 'todos'
 
 from rest_framework import routers
 
-
-router = routers.SimpleRouter()
+router = routers.DefaultRouter()
 
 
 router.register(r'todos', TodoAPIViewSet, 'todos')
