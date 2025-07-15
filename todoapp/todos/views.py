@@ -1,45 +1,14 @@
-from rest_framework.viewsets import ModelViewSet
-# from rest_framework.response import Response
-# from .models import Todo
-# from .serializers import TodoCreateSerializer
-# from rest_framework.permissions import AllowAny
-# from rest_framework import status
-
-# class TodoAPIViewSet(ModelViewSet):
-#     """
-#         success response for create/update/get
-#         {
-#           "name": "",
-#           "done": true/false,
-#           "date_created": ""
-#         }
-
-#         success response for list
-#         [
-#           {
-#             "name": "",
-#             "done": true/false,
-#             "date_created": ""
-#           }
-#         ]
-#     """
-
-
-
-# views.py
-from rest_framework.permissions import AllowAny
-from rest_framework import viewsets, mixins, generics, status
-from rest_framework.response import Response
-from .models import Todo
-from .serializers import (
-    TodoCreateSerializer,
-    TodoUpdateSerializer,
-    TodoDetailSerializer,
-    TodoListSerializer
-)
 from django.contrib.auth.models import User
-from rest_framework.pagination import PageNumberPagination
+from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
+
+from .models import Todo
+from .serializers import (TodoCreateSerializer, TodoDetailUpdateSerializer,
+                          TodoListSerializer)
 
 
 class TodoPagination(PageNumberPagination):
@@ -73,7 +42,7 @@ class TodoAPIViewSet(viewsets.ViewSet):
         except Todo.DoesNotExist:
             return Response({"error": "Todo not found"}, status=404)
 
-        serializer = TodoUpdateSerializer(todo, data=request.data)
+        serializer = TodoDetailUpdateSerializer(todo, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
@@ -84,7 +53,7 @@ class TodoAPIViewSet(viewsets.ViewSet):
             todo = Todo.objects.get(pk=pk)
         except Todo.DoesNotExist:
             return Response({"error": "Todo not found"}, status=404)
-        serializer = TodoDetailSerializer(todo)
+        serializer = TodoDetailUpdateSerializer(todo)
         return Response(serializer.data)
 
     def destroy(self, request, pk=None):
@@ -105,7 +74,4 @@ class TodoAPIViewSet(viewsets.ViewSet):
         paginated_qs = paginator.paginate_queryset(todos, request)
         serializer = TodoListSerializer(paginated_qs, many=True)
         return paginator.get_paginated_response(serializer.data)
-
-
-
-
+    

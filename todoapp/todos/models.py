@@ -1,12 +1,14 @@
 from __future__ import unicode_literals
 
+import datetime
+
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 from django.utils.encoding import smart_str as smart_unicode
 from django.utils.translation import gettext_lazy as _
-from django.conf import settings
-import datetime
-from django.utils import timezone
+
 
 class Todo(models.Model):
 
@@ -18,11 +20,11 @@ class Todo(models.Model):
     name = models.CharField(max_length=100)
     done = models.BooleanField(default=False)
     date_created = models.DateTimeField(auto_now_add=True)
-    date_completed = models.DateTimeField(null=True,blank=True)
+    date_completed = models.DateTimeField(null=True, blank=True)
   
     @property
     def status(self):
-        return 'done' if self.done else 'To do'
+        return 'Done' if self.done else 'To Do'
 
     def __str__(self):
         return self.name

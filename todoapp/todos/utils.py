@@ -1,17 +1,18 @@
 import json
-from .models import Todo
-from users.models import CustomUser
-from .serializers import TaskSerializer,Task2Serializer,User2Serializer,Serializer3,Serializer4,Serializer5,projectSerializer,Serializer6,UserProjectStatusSerializer,Serializer9
-from users.serializers import UserSerializer
-from rest_framework import serializers
-from rest_framework.response import Response
-from rest_framework.authtoken.models import Token
-from projects.models import Project,ProjectMember
-from django.db.models import Count, Q
-from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import Prefetch
-from django.contrib.postgres.aggregates import ArrayAgg
 
+from django.contrib.postgres.aggregates import ArrayAgg
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db.models import Count, Prefetch, Q
+from rest_framework import serializers
+from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
+
+from projects.models import Project, ProjectMember
+from projects.serializers import ProjectWiseReportSerializer
+from users.models import CustomUser
+
+from .models import Todo
+from .serializers import *
 
 # from .todoapp.users.models import CustomUser
 # Add code to this util to return all users list in specified format.
@@ -32,17 +33,10 @@ from django.contrib.postgres.aggregates import ArrayAgg
 
 def fetch_all_users():
     """
-    Util to fetch given user's tod0 list
+    Util to fetch given user's todo list
     :return: list of dicts - List of users data
     """
-    userdata=CustomUser.objects.all()
-    serializer=UserSerializer(userdata,many=True)
-    return json.loads(json.dumps(serializer.data))
-    # print(json.loads(json.dumps(serializer.data)))
-    # print(json.dumps(data))
-    
-
-
+    pass
 # Add code to this util to  return all todos list (done/to do) along with user details in specified format.
 # [{
 #   "id": 1,
@@ -68,13 +62,11 @@ def fetch_all_users():
 # }]
 # Note: use serializer for generating this format.
 # use json.load(json.dumps(serializer.data)) while returning data from this function for test cases to pass.
-def fetch_all_todo_list_with_user_details():
-    userdata=Todo.objects.select_related('user').all()
-    serializer=Task2Serializer(userdata,many=True)
-    return json.loads(json.dumps(serializer.data))
-    # print(json.dumps(serializer.data))
-    # print(json.dumps(serializer.data))
 
+def fetch_all_todo_list_with_user_details():
+    userdata = Todo.objects.select_related('user').all()
+    serializer = AllTodosSerializer(userdata,many=True)
+    return json.loads(json.dumps(serializer.data))
 
 # Add code to this util to return all projects with following details in specified format.
 # [{
@@ -94,11 +86,7 @@ def fetch_all_todo_list_with_user_details():
 # Note: use serializer for generating this format. use source for status in serializer field.
 # use json.load(json.dumps(serializer.data)) while returning data from this function for test cases to pass.
 def fetch_projects_details():
-    # pro=Project.objects.all()
     pass
-
-    
-
 
 # Add code to this util to  return stats (done & to do count) of all users in specified format.
 # [{
@@ -119,16 +107,14 @@ def fetch_projects_details():
 # }]
 # Note: use serializer for generating this format.
 # use json.load(json.dumps(serializer.data)) while returning data from this function for test cases to pass.
+
 def fetch_users_todo_stats():
     users = CustomUser.objects.annotate(
         completed_count=Count('todos', filter=Q(todos__done=True)),
         pending_count=Count('todos', filter=Q(todos__done=False))
     )
-    serializer=Serializer4(users,many=True)
-    # print(json.dumps(serializer.data))
+    serializer = UsersTodoStatsSerializer(users,many=True)
     return json.loads(json.dumps(serializer.data))
-
-
 
 # Add code to this util to return top five users with maximum number of pending todos in specified format.
 # [{
@@ -147,15 +133,14 @@ def fetch_users_todo_stats():
 # }]
 # Note: use serializer for generating this format.
 # use json.load(json.dumps(serializer.data)) while returning data from this function for test cases to pass.
+
 def fetch_five_users_with_max_pending_todos():
+
     users = CustomUser.objects.annotate(
-        completed_count=Count('todos', filter=Q(todos__done=True)),
         pending_count=Count('todos', filter=Q(todos__done=False))
     ).order_by('-pending_count')[:5]
-    serializer=Serializer4(users,many=True)
+    serializer = PendingTodosSerializer(users,many=True)
     return json.loads(json.dumps(serializer.data))
-    # print(json.dumps(serializer.data))
-
 
 # Add code to this util to return users with given number of pending todos in specified format.
 # e.g where n=4
@@ -176,11 +161,12 @@ def fetch_five_users_with_max_pending_todos():
 # Note: use serializer for generating this format.
 # use json.load(json.dumps(serializer.data)) while returning data from this function for test cases to pass.
 # Hint : use annotation and aggregations
+
 def fetch_users_with_n_pending_todos(n):
     users = CustomUser.objects.annotate(
-        pending_count=Count('todos', filter=Q(todos__done=False))
+        pending_count = Count('todos', filter=Q(todos__done=False))
     ).filter(pending_count=n)
-    serializer=Serializer9(users,many=True)
+    serializer = PendingTodosSerializer(users, many=True)
     return json.loads(json.dumps(serializer.data))
     # print(json.dumps(serializer.data))
 
@@ -206,6 +192,7 @@ def fetch_users_with_n_pending_todos(n):
 # }]
 # Note: use serializer for generating this format.
 # use json.load(json.dumps(serializer.data)) while returning data from this function for test cases to pass.
+
 def fetch_completed_todos_with_in_date_range(start, end):
     """
     Util to fetch todos that were created in between given dates and marked as done.
@@ -231,6 +218,7 @@ def fetch_completed_todos_with_in_date_range(start, end):
 # }]
 # Note: use serializer for generating this format.
 # use json.load(json.dumps(serializer.data)) while returning data from this function for test cases to pass.
+
 def fetch_project_with_member_name_start_or_end_with_a():
     """
     Util to fetch project details having members who have name either starting with A or ending with A.
@@ -281,6 +269,7 @@ def fetch_project_with_member_name_start_or_end_with_a():
 # }]
 # Note: use serializer for generating this format.
 # use json.load(json.dumps(serializer.data)) while returning data from this function for test cases to pass.
+
 def fetch_project_wise_report():
     annotated_users = CustomUser.objects.annotate(
         completed_count=Count('todos', filter=Q(todos__done=True)),
@@ -290,9 +279,7 @@ def fetch_project_wise_report():
     projects = Project.objects.prefetch_related(
         Prefetch('member', queryset=annotated_users, to_attr='annotated_members')
     )
-
-    serializer = projectSerializer(projects, many=True)
-    # print(json.loads(json.dumps(serializer.data)))
+    serializer = ProjectWiseReportSerializer(projects, many=True)
     return json.loads(json.dumps(serializer.data))
 
 
@@ -320,12 +307,9 @@ def fetch_project_wise_report():
 # Note: Use serializer for generating this format.
 # use json.load(json.dumps(serializer.data)) while returning data from this function for test cases to pass.
 # Hint: Use subquery/aggregation for project data.
+
 def fetch_user_wise_project_status():
-    """
-    Util to fetch user wise project statuses.
-    :return: list of dicts - List of user project data
-    """
-    result=[]
+    result = []
     users_with_projects = CustomUser.objects.annotate(
       to_be_started_projects=ArrayAgg(
         'project_membership__project__name',
@@ -344,7 +328,6 @@ def fetch_user_wise_project_status():
       ),
     )
     for user in users_with_projects:
-        if user.first_name=='abhijeet': continue
         result.append({
         "first_name": user.first_name,
         "last_name": user.last_name,
@@ -354,11 +337,5 @@ def fetch_user_wise_project_status():
         "completed_projects": user.completed_projects,
         })
 
-
-    serializer = UserProjectStatusSerializer(result, many=True)
-    # print(json.loads(json.dumps(serializer.data)))
+    serializer = UserWiseProjectStatusSerializer(result, many=True)
     return json.loads(json.dumps(serializer.data))
-
-
-
-
